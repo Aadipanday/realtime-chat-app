@@ -16,6 +16,10 @@ export const accessChat = asyncHandler(async (req, res) => {
     throw new ApiError(400, "UserId param not sent with request");
   }
 
+  if (userId.toString() === req.user._id.toString()) {
+    throw new ApiError(400, "Cannot create a 1-to-1 chat with yourself");
+  }
+
   // Check if a 1-to-1 chat already exists between the two users
   let isChat = await Chat.find({
     isGroupChat: false,
@@ -102,8 +106,10 @@ export const createGroupChat = asyncHandler(async (req, res) => {
     );
   }
 
-  // Add the current logged-in user to the group members
-  groupMembers.push(req.user._id);
+  // Add the current logged-in user to the group members if not already included
+  if (!groupMembers.some((id) => id.toString() === req.user._id.toString())) {
+    groupMembers.push(req.user._id);
+  }
 
   const groupChat = await Chat.create({
     chatName: name.trim(),
@@ -174,8 +180,8 @@ export const addToGroup = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Only group admin can add members to the group");
   }
 
-  // Check if user is already in the group
-  if (chat.users.includes(userId)) {
+  // Check if user is already in the group (compare ObjectIds as strings)
+  if (chat.users.some((id) => id.toString() === userId.toString())) {
     throw new ApiError(400, "User is already in the group");
   }
 

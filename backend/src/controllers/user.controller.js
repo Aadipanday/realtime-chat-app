@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
 // Helper function to generate access and refresh tokens
@@ -117,11 +117,12 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Find user by email or username
+  const searchConditions = [];
+  if (email) searchConditions.push({ email: email.toLowerCase().trim() });
+  if (username) searchConditions.push({ username: username.toLowerCase().trim() });
+
   const user = await User.findOne({
-    $or: [
-      { email: email ? email.toLowerCase().trim() : null },
-      { username: username ? username.toLowerCase().trim() : null },
-    ],
+    $or: searchConditions,
   });
 
   if (!user) {
