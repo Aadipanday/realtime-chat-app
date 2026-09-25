@@ -55,9 +55,19 @@ app.use("/api", generalLimiter);
 app.use("/api/users/login", authLimiter);
 app.use("/api/users/register", authLimiter);
 
-// Base health check route
+// Root & health check routes
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "active",
+    message: "Real-Time Chat App Backend is running securely 🚀",
+  });
+});
+
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "ok", message: "Server is running smoothly and securely" });
+  res.status(200).json({
+    status: "ok",
+    message: "Server is running smoothly and securely",
+  });
 });
 
 // API Routes
