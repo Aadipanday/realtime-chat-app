@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Chat } from "../models/chat.model.js";
 import { User } from "../models/user.model.js";
+import { getReceiverSocketId, getReceiverSocketIds } from "../socket/socket.js";
 
 /**
  * @desc    Create or access a 1-to-1 chat
@@ -53,6 +54,15 @@ export const accessChat = asyncHandler(async (req, res) => {
       "users",
       "-password -refreshToken"
     );
+
+    // Notify recipient in real-time that a new chat was started
+    const io = req.app.get("io");
+    if (io) {
+      const recipientSocketIds = getReceiverSocketIds(userId);
+      recipientSocketIds.forEach((sid) => {
+        io.to(sid).emit("newChatCreated", fullChat);
+      });
+    }
 
     return res
       .status(201)
@@ -122,6 +132,20 @@ export const createGroupChat = asyncHandler(async (req, res) => {
     .populate("users", "-password -refreshToken")
     .populate("groupAdmin", "-password -refreshToken");
 
+  // Notify all group members in real-time
+  const io = req.app.get("io");
+  if (io && fullGroupChat) {
+    fullGroupChat.users.forEach((member) => {
+      const memberId = member._id ? member._id.toString() : member.toString();
+      if (memberId !== req.user._id.toString()) {
+        const socketId = getReceiverSocketId(memberId);
+        if (socketId) {
+          io.to(socketId).emit("newChatCreated", fullGroupChat);
+        }
+      }
+    });
+  }
+
   return res
     .status(201)
     .json(
@@ -141,17 +165,28 @@ export const renameGroup = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Chat ID and new chat name are required");
   }
 
-  const updatedChat = await Chat.findByIdAndUpdate(
-    chatId,
-    { chatName: chatName.trim() },
-    { new: true }
-  )
-    .populate("users", "-password -refreshToken")
-    .populate("groupAdmin", "-password -refreshToken");
-
-  if (!updatedChat) {
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
     throw new ApiError(404, "Chat not found");
   }
+
+  if (!chat.isGroupChat) {
+    throw new ApiError(400, "Cannot rename 1-to-1 chats");
+  }
+
+  const isMember = chat.users.some(
+    (id) => id.toString() === req.user._id.toString()
+  );
+  if (!isMember) {
+    throw new ApiError(403, "You are not authorized to rename this group");
+  }
+
+  chat.chatName = chatName.trim();
+  await chat.save();
+
+  const updatedChat = await Chat.findById(chatId)
+    .populate("users", "-password -refreshToken")
+    .populate("groupAdmin", "-password -refreshToken");
 
   return res
     .status(200)

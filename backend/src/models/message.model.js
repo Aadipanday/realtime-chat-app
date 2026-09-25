@@ -10,17 +10,40 @@ const messageSchema = new mongoose.Schema(
     content: {
       type: String,
       trim: true,
-      required: [true, "Message content cannot be empty"],
+      maxlength: [2000, "Message cannot exceed 2000 characters"],
+      default: "",
     },
     chat: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Chat",
       required: true,
     },
+    mediaUrl: {
+      type: String,
+      default: null,
+    },
+    mediaType: {
+      type: String,
+      enum: ["text", "image", "audio"],
+      default: "text",
+    },
     readBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+      },
+    ],
+    reactions: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        emoji: {
+          type: String,
+          required: true,
+        },
       },
     ],
   },

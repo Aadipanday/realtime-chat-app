@@ -232,9 +232,21 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const getCurrentUser = asyncHandler(async (req, res) => {
+  const token =
+    req.cookies?.accessToken ||
+    req.header("Authorization")?.replace("Bearer ", "");
+
+  const userObj = req.user.toObject ? req.user.toObject() : req.user;
+
   return res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { ...userObj, accessToken: token },
+        "Current user fetched successfully"
+      )
+    );
 });
 
 /**
@@ -243,14 +255,19 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const getAllUsers = asyncHandler(async (req, res) => {
-  const keyword = req.query.search
-    ? {
-        $or: [
-          { username: { $regex: req.query.search, $options: "i" } },
-          { email: { $regex: req.query.search, $options: "i" } },
-        ],
-      }
-    : {};
+  const search = req.query.search?.trim();
+  let keyword = {};
+
+  if (search) {
+    // Sanitize special regex characters to prevent ReDoS
+    const sanitizedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    keyword = {
+      $or: [
+        { username: { $regex: sanitizedSearch, $options: "i" } },
+        { email: { $regex: sanitizedSearch, $options: "i" } },
+      ],
+    };
+  }
 
   const users = await User.find({
     ...keyword,
