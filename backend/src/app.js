@@ -95,6 +95,7 @@ const generalLimiter = rateLimit({
 app.use("/api", generalLimiter);
 app.use("/api/users/login", authLimiter);
 app.use("/api/users/register", authLimiter);
+app.use("/api/users/change-password", authLimiter);
 app.use("/api/users/avatar", uploadLimiter);
 app.use("/api/messages", uploadLimiter);
 

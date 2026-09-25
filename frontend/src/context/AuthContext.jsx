@@ -107,6 +107,21 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async ({ oldPassword, newPassword }) => {
+    try {
+      const { data } = await API.post("/users/change-password", {
+        oldPassword,
+        newPassword,
+      });
+      toast.success(data.message || "Password changed successfully!");
+      return { success: true };
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to change password";
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -117,6 +132,7 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         updateAvatar,
+        changePassword,
       }}
     >
       {children}
