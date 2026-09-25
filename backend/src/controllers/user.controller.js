@@ -66,8 +66,8 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   if (avatarLocalPath) {
     const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
-    if (uploadedAvatar?.url) {
-      avatarUrl = uploadedAvatar.url;
+    if (uploadedAvatar?.secure_url || uploadedAvatar?.url) {
+      avatarUrl = uploadedAvatar.secure_url || uploadedAvatar.url;
     }
   }
 
@@ -292,15 +292,17 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
   }
 
   const uploadedAvatar = await uploadOnCloudinary(avatarLocalPath);
-  if (!uploadedAvatar?.url) {
+  if (!uploadedAvatar?.secure_url && !uploadedAvatar?.url) {
     throw new ApiError(500, "Error while uploading avatar to cloud");
   }
+
+  const avatarUrl = uploadedAvatar.secure_url || uploadedAvatar.url;
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
-        avatar: uploadedAvatar.url,
+        avatar: avatarUrl,
       },
     },
     { new: true }

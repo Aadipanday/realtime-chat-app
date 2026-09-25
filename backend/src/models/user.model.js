@@ -30,6 +30,7 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: "https://api.dicebear.com/7.x/bottts/svg?seed=default",
+      set: (v) => (v ? v.replace(/^http:\/\//i, "https://") : v),
     },
     refreshToken: {
       type: String,

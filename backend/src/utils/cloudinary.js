@@ -21,6 +21,7 @@ const uploadOnCloudinary = async (localFilePath) => {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       folder: "chat_app",
+      secure: true,
     });
 
     // File uploaded successfully, remove the local temporary file

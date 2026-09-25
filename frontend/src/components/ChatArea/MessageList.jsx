@@ -66,11 +66,13 @@ const VoiceNotePlayer = ({ audioUrl, isSender }) => {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
+  const safeAudioUrl = audioUrl ? audioUrl.replace(/^http:\/\//i, "https://") : "";
+
   return (
     <div className="flex items-center gap-2.5 py-1 min-w-[200px] sm:min-w-[240px]">
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src={safeAudioUrl}
         preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
@@ -371,9 +373,9 @@ export const MessageList = () => {
                     {message.mediaUrl && message.mediaType === "image" && (
                       <div className="mb-1 rounded-lg overflow-hidden">
                         <img
-                          src={message.mediaUrl}
+                          src={message.mediaUrl.replace(/^http:\/\//i, "https://")}
                           alt="Attachment"
-                          onClick={() => setPreviewImage(message.mediaUrl)}
+                          onClick={() => setPreviewImage(message.mediaUrl.replace(/^http:\/\//i, "https://"))}
                           className="max-h-72 w-auto object-cover rounded-md cursor-pointer hover:opacity-95 transition-opacity"
                         />
                       </div>
@@ -382,7 +384,7 @@ export const MessageList = () => {
                     {/* Media Type 2: Audio Voice Note */}
                     {message.mediaUrl && message.mediaType === "audio" && (
                       <VoiceNotePlayer
-                        audioUrl={message.mediaUrl}
+                        audioUrl={message.mediaUrl.replace(/^http:\/\//i, "https://")}
                         isSender={isSender}
                       />
                     )}

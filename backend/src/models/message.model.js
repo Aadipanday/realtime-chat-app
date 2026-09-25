@@ -21,6 +21,7 @@ const messageSchema = new mongoose.Schema(
     mediaUrl: {
       type: String,
       default: null,
+      set: (v) => (v ? v.replace(/^http:\/\//i, "https://") : v),
     },
     mediaType: {
       type: String,

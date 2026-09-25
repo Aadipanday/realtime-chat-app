@@ -1,11 +1,13 @@
 import axios from "axios";
 
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://realtime-chat-app-25ow.onrender.com/api"
+    : "/api");
+
 const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    (import.meta.env.PROD
-      ? "https://realtime-chat-app-25ow.onrender.com/api"
-      : "/api"),
+  baseURL: BASE_URL,
   withCredentials: true,
 });
 
@@ -24,7 +26,7 @@ API.interceptors.response.use(
       originalRequest._retry = true;
       try {
         await axios.post(
-          `${import.meta.env.VITE_API_URL || "/api"}/users/refresh-token`,
+          `${BASE_URL}/users/refresh-token`,
           {},
           { withCredentials: true }
         );

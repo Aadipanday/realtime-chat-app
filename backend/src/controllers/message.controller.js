@@ -42,8 +42,8 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   if (fileLocalPath) {
     const uploaded = await uploadOnCloudinary(fileLocalPath);
-    if (uploaded?.url) {
-      mediaUrl = uploaded.url;
+    if (uploaded?.secure_url || uploaded?.url) {
+      mediaUrl = uploaded.secure_url || uploaded.url;
       mediaType = req.file.mimetype.startsWith("audio") ? "audio" : "image";
     }
   }

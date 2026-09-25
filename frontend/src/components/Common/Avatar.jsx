@@ -27,10 +27,12 @@ export const Avatar = ({
     alt || "user"
   )}`;
 
+  const safeSrc = src ? src.replace(/^http:\/\//i, "https://") : fallbackAvatar;
+
   return (
     <div className={`relative inline-block shrink-0 ${className}`}>
       <img
-        src={src || fallbackAvatar}
+        src={safeSrc}
         alt={alt}
         className={`${sizeClasses[size] || sizeClasses.md} rounded-full object-cover bg-[var(--bg-active)]`}
         onError={(e) => {
