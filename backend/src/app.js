@@ -103,7 +103,8 @@ app.use("/api/messages", uploadLimiter);
 app.get("/", (req, res) => {
   res.status(200).json({
     status: "active",
-    message: "Real-Time Chat App Backend is running securely 🚀",
+    app: "PulseChat",
+    message: "PulseChat Backend is running securely 🚀 • Powered by aadi",
   });
 });
 

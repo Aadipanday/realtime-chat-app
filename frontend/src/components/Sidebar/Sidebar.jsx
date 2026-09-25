@@ -5,6 +5,7 @@ import { useSocket } from "../../context/SocketContext";
 import { Avatar } from "../Common/Avatar";
 import { ThemeModal } from "../Common/ThemeModal";
 import { ProfileModal } from "../Common/ProfileModal";
+import { Logo } from "../Common/Logo";
 import { UserSearchModal } from "./UserSearchModal";
 import { CreateGroupModal } from "./CreateGroupModal";
 import {
@@ -360,6 +361,17 @@ export const Sidebar = () => {
             );
           })
         )}
+      </div>
+
+      {/* Sidebar Footer Branding */}
+      <div className="py-2.5 px-3.5 border-t border-[var(--border-color)] bg-[var(--bg-header)]/70 flex items-center justify-between text-xs text-[var(--text-secondary)] select-none shrink-0">
+        <div className="flex items-center gap-2">
+          <Logo size="sm" showText={false} />
+          <span className="font-bold text-xs text-[var(--text-primary)]">PulseChat</span>
+        </div>
+        <span className="text-[10px] text-[var(--accent-color)] font-medium flex items-center gap-1">
+          <span>⚡</span> powered by aadi
+        </span>
       </div>
 
       {/* Modals */}

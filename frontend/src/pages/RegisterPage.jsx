@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { ThemeModal } from "../components/Common/ThemeModal";
+import { Logo } from "../components/Common/Logo";
 import {
-  MessageSquare,
   Lock,
   User,
   Mail,
@@ -79,25 +79,20 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-primary)]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[var(--bg-primary)]">
       <button
         onClick={() => setIsThemeOpen(true)}
-        className="fixed top-5 right-5 p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shadow-xs"
+        className="fixed top-5 right-5 p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors shadow-xs cursor-pointer"
         title="Change Theme"
       >
         <Palette size={18} />
       </button>
 
       <div className="w-full max-w-sm rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-7 shadow-xl">
-        <div className="text-center mb-5">
-          <div className="w-12 h-12 rounded-xl bg-[var(--accent-color)] text-white flex items-center justify-center mx-auto mb-2 shadow-md">
-            <MessageSquare size={24} />
-          </div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">
-            Create an Account
-          </h1>
+        <div className="flex flex-col items-center text-center mb-5">
+          <Logo size="lg" showText={true} showBadge={true} className="mb-2" />
           <p className="text-xs text-[var(--text-secondary)] mt-1">
-            Get started with real-time conversations
+            Create an account to start messaging
           </p>
         </div>
 
@@ -249,6 +244,12 @@ export const RegisterPage = () => {
           </Link>
         </p>
       </div>
+
+      <p className="text-[11px] text-[var(--text-secondary)]/70 mt-6 select-none flex items-center gap-1.5">
+        <span>⚡ PulseChat</span>
+        <span>•</span>
+        <span className="text-[var(--accent-color)] font-medium">Powered by aadi</span>
+      </p>
 
       <ThemeModal isOpen={isThemeOpen} onClose={() => setIsThemeOpen(false)} />
     </div>
