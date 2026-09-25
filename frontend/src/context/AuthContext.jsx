@@ -22,10 +22,18 @@ export const AuthProvider = ({ children }) => {
         if (data.data.accessToken) {
           localStorage.setItem("chat_app_token", data.data.accessToken);
         }
+        if (data.data.refreshToken) {
+          localStorage.setItem("chat_app_refresh_token", data.data.refreshToken);
+        }
       } catch (error) {
-        setAuthUser(null);
-        localStorage.removeItem("chat_app_user");
-        localStorage.removeItem("chat_app_token");
+        // Only wipe user session if backend explicitly rejected with 401 Unauthorized.
+        // If it's a temporary network hiccup or Render cold-start, do NOT kick user to login screen.
+        if (error.response?.status === 401) {
+          setAuthUser(null);
+          localStorage.removeItem("chat_app_user");
+          localStorage.removeItem("chat_app_token");
+          localStorage.removeItem("chat_app_refresh_token");
+        }
       } finally {
         setIsCheckingAuth(false);
       }
@@ -39,10 +47,14 @@ export const AuthProvider = ({ children }) => {
       const { data } = await API.post("/users/login", credentials);
       const user = data.data.user;
       const token = data.data.accessToken;
+      const refreshToken = data.data.refreshToken;
       setAuthUser(user);
       localStorage.setItem("chat_app_user", JSON.stringify(user));
       if (token) {
         localStorage.setItem("chat_app_token", token);
+      }
+      if (refreshToken) {
+        localStorage.setItem("chat_app_refresh_token", refreshToken);
       }
       toast.success("Welcome back, " + user.username + "!");
       return { success: true };
@@ -60,10 +72,14 @@ export const AuthProvider = ({ children }) => {
       });
       const user = data.data.user;
       const token = data.data.accessToken;
+      const refreshToken = data.data.refreshToken;
       setAuthUser(user);
       localStorage.setItem("chat_app_user", JSON.stringify(user));
       if (token) {
         localStorage.setItem("chat_app_token", token);
+      }
+      if (refreshToken) {
+        localStorage.setItem("chat_app_refresh_token", refreshToken);
       }
       toast.success("Account created successfully!");
       return { success: true };
@@ -83,6 +99,7 @@ export const AuthProvider = ({ children }) => {
       setAuthUser(null);
       localStorage.removeItem("chat_app_user");
       localStorage.removeItem("chat_app_token");
+      localStorage.removeItem("chat_app_refresh_token");
       toast.success("Logged out successfully");
     }
   };
