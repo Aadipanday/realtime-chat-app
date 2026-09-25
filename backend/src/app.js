@@ -19,10 +19,21 @@ app.use(
   })
 );
 
-// 2. CORS configuration
+// 2. CORS configuration (supports production Vercel domains, CLIENT_URL, and local dev)
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const clientUrl = process.env.CLIENT_URL || "";
+      if (
+        origin.endsWith(".vercel.app") ||
+        origin.includes("localhost") ||
+        (clientUrl && origin.includes(clientUrl.replace(/\/+$/, "")))
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );

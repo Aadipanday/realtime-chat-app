@@ -6,7 +6,9 @@ const SocketContext = createContext();
 
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL ||
-  (import.meta.env.PROD ? window.location.origin : "http://localhost:5000");
+  (import.meta.env.PROD
+    ? "https://realtime-chat-app-25ow.onrender.com"
+    : "http://localhost:5000");
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
