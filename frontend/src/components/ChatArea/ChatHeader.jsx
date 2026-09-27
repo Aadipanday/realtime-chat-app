@@ -87,13 +87,21 @@ export const ChatHeader = () => {
     ? "online"
     : formatLastSeen(lastSeenDate);
 
+  const handleBack = () => {
+    setSelectedChat(null);
+    if (window.history.state?.chatOpen) {
+      window.history.back();
+    }
+  };
+
   return (
     <header className="h-[60px] flex items-center justify-between px-4 border-b border-[var(--border-color)] bg-[var(--bg-header)] shrink-0 select-none">
       <div className="flex items-center gap-3 min-w-0">
         {/* Mobile back button */}
         <button
-          onClick={() => setSelectedChat(null)}
+          onClick={handleBack}
           className="md:hidden p-1.5 -ml-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full hover:bg-[var(--bg-active)] cursor-pointer"
+          title="Back to chats"
         >
           <ArrowLeft size={19} />
         </button>

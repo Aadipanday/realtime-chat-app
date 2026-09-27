@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useChat } from "../context/ChatContext";
 import { Sidebar } from "../components/Sidebar/Sidebar";
 import { ChatHeader } from "../components/ChatArea/ChatHeader";
@@ -7,7 +7,35 @@ import { MessageInput } from "../components/ChatArea/MessageInput";
 import { NoChatSelected } from "../components/ChatArea/NoChatSelected";
 
 export const ChatPage = () => {
-  const { selectedChat } = useChat();
+  const { selectedChat, setSelectedChat } = useChat();
+  const selectedChatRef = useRef(selectedChat);
+
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
+  // Handle mobile hardware/gesture back button: closes active chat instead of exiting app
+  useEffect(() => {
+    const handlePopState = () => {
+      if (selectedChatRef.current) {
+        setSelectedChat(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [setSelectedChat]);
+
+  // Push history state whenever a chat is opened so back gesture goes to chat list
+  useEffect(() => {
+    if (selectedChat?._id) {
+      if (!window.history.state?.chatOpen) {
+        window.history.pushState({ chatOpen: true }, "");
+      }
+    }
+  }, [selectedChat?._id]);
 
   return (
     <div className="flex h-full h-[100dvh] w-full overflow-hidden bg-[var(--bg-secondary)] fixed inset-0">
