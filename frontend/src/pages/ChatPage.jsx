@@ -10,7 +10,7 @@ export const ChatPage = () => {
   const { selectedChat } = useChat();
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-secondary)]">
+    <div className="flex h-full h-[100dvh] w-full overflow-hidden bg-[var(--bg-secondary)] fixed inset-0">
       {/* Sidebar: Visible on desktop, or on mobile when no chat is open */}
       <div
         className={`w-full md:w-auto h-full ${

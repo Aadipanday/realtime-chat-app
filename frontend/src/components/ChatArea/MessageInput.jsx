@@ -340,6 +340,11 @@ export const MessageInput = () => {
             placeholder={selectedImage ? "Add a caption..." : "Type a message"}
             value={content}
             onChange={handleTyping}
+            onFocus={() => {
+              setTimeout(() => {
+                document.getElementById("messages-bottom-anchor")?.scrollIntoView({ behavior: "smooth" });
+              }, 300);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

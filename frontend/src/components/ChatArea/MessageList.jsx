@@ -255,7 +255,7 @@ export const MessageList = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-3 whatsapp-chat-wallpaper">
+    <div className="flex-1 overflow-y-auto p-4 space-y-3 whatsapp-chat-wallpaper overscroll-contain">
       {/* Lightbox Modal for Full Image View */}
       {previewImage && (
         <div
@@ -511,7 +511,7 @@ export const MessageList = () => {
         </div>
       )}
 
-      <div ref={messagesEndRef} />
+      <div ref={messagesEndRef} id="messages-bottom-anchor" />
     </div>
   );
 };
