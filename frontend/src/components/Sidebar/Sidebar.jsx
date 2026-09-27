@@ -5,6 +5,7 @@ import { useSocket } from "../../context/SocketContext";
 import { Avatar } from "../Common/Avatar";
 import { ThemeModal } from "../Common/ThemeModal";
 import { ProfileModal } from "../Common/ProfileModal";
+import { ContactProfileModal } from "../Common/ContactProfileModal";
 import { Logo } from "../Common/Logo";
 import { UserSearchModal } from "./UserSearchModal";
 import { CreateGroupModal } from "./CreateGroupModal";
@@ -37,6 +38,7 @@ export const Sidebar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isGroupOpen, setIsGroupOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [previewUser, setPreviewUser] = useState(null);
 
   // Helper to extract the other user in a 1-to-1 chat
   const getOtherUser = (chat) => {
@@ -313,12 +315,35 @@ export const Sidebar = () => {
                     : "hover:bg-[var(--bg-header)]/70"
                 }`}
               >
-                <Avatar
-                  src={avatarSrc}
-                  alt={displayName}
-                  isOnline={isOnline}
-                  size="md"
-                />
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewUser(
+                      otherUser
+                        ? {
+                            ...otherUser,
+                            username: displayName,
+                            avatar: avatarSrc,
+                            chat,
+                          }
+                        : {
+                            _id: chat._id,
+                            username: displayName,
+                            avatar: avatarSrc,
+                            chat,
+                          }
+                    );
+                  }}
+                  className="relative shrink-0 hover:scale-105 transition-transform"
+                  title="Click to view contact info & photo"
+                >
+                  <Avatar
+                    src={avatarSrc}
+                    alt={displayName}
+                    isOnline={isOnline}
+                    size="md"
+                  />
+                </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
@@ -387,6 +412,17 @@ export const Sidebar = () => {
       <CreateGroupModal
         isOpen={isGroupOpen}
         onClose={() => setIsGroupOpen(false)}
+      />
+      <ContactProfileModal
+        isOpen={!!previewUser}
+        onClose={() => setPreviewUser(null)}
+        user={previewUser}
+        isOnline={previewUser?.isOnline}
+        onStartChat={(u) => {
+          if (previewUser?.chat) {
+            setSelectedChat(previewUser.chat);
+          }
+        }}
       />
     </aside>
   );

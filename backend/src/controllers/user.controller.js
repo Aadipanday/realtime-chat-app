@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import { Chat } from "../models/chat.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
 
@@ -269,14 +270,59 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     };
   }
 
+  const currentUserId = req.user._id;
+
+  // Retrieve user's active 1-to-1 chats to identify existing contacts
+  const existingUserChats = await Chat.find({
+    users: currentUserId,
+    isGroupChat: false,
+  }).select("users");
+
+  const contactUserIds = new Set();
+  existingUserChats.forEach((chat) => {
+    chat.users.forEach((uid) => {
+      if (uid.toString() !== currentUserId.toString()) {
+        contactUserIds.add(uid.toString());
+      }
+    });
+  });
+
   const users = await User.find({
     ...keyword,
-    _id: { $ne: req.user._id },
-  }).select("-password -refreshToken");
+    _id: { $ne: currentUserId },
+  })
+    .select("-password -refreshToken")
+    .lean();
+
+  const filteredUsers = users
+    .filter((user) => {
+      const isContact = contactUserIds.has(user._id.toString());
+      const findSetting = user.privacySettings?.whoCanFindMe || "everyone";
+      // If user sets whoCanFindMe to "nobody", they do not appear in searches unless they already share a chat
+      if (findSetting === "nobody" && !isContact) {
+        return false;
+      }
+      return true;
+    })
+    .map((user) => {
+      const isContact = contactUserIds.has(user._id.toString());
+      const photoPrivacy = user.privacySettings?.profilePhoto || "everyone";
+      if (
+        photoPrivacy === "nobody" ||
+        (photoPrivacy === "contacts" && !isContact)
+      ) {
+        return {
+          ...user,
+          avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=private",
+          isAvatarHidden: true,
+        };
+      }
+      return user;
+    });
 
   return res
     .status(200)
-    .json(new ApiResponse(200, users, "Users fetched successfully"));
+    .json(new ApiResponse(200, filteredUsers, "Users fetched successfully"));
 });
 
 /**
@@ -349,4 +395,139 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+/**
+ * @desc    Get a user's public profile with privacy applied
+ * @route   GET /api/users/profile/:userId
+ * @access  Private
+ */
+export const getUserProfile = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    throw new ApiError(400, "User ID is required");
+  }
+
+  const targetUser = await User.findById(userId)
+    .select("-password -refreshToken")
+    .lean();
+
+  if (!targetUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const currentUserId = req.user._id;
+  const isSelf = targetUser._id.toString() === currentUserId.toString();
+
+  if (isSelf) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, targetUser, "Profile retrieved successfully"));
+  }
+
+  // Check if they share any chat (1-to-1 or group)
+  const sharedChat = await Chat.findOne({
+    users: { $all: [currentUserId, targetUser._id] },
+  });
+
+  const isContact = !!sharedChat;
+  const photoPrivacy = targetUser.privacySettings?.profilePhoto || "everyone";
+
+  const sanitizedUser = {
+    _id: targetUser._id,
+    username: targetUser.username,
+    email: targetUser.email,
+    about: targetUser.about || "Hey there! I am using PulseChat.",
+    avatar: targetUser.avatar,
+    isOnline: targetUser.isOnline,
+    lastSeen: targetUser.lastSeen,
+    createdAt: targetUser.createdAt,
+    isAvatarHidden: false,
+  };
+
+  if (
+    photoPrivacy === "nobody" ||
+    (photoPrivacy === "contacts" && !isContact)
+  ) {
+    sanitizedUser.avatar = "https://api.dicebear.com/7.x/identicon/svg?seed=private";
+    sanitizedUser.isAvatarHidden = true;
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, sanitizedUser, "User profile retrieved successfully")
+    );
+});
+
+/**
+ * @desc    Update privacy settings for current user
+ * @route   PATCH /api/users/privacy
+ * @access  Private
+ */
+export const updatePrivacySettings = asyncHandler(async (req, res) => {
+  const { profilePhoto, whoCanFindMe } = req.body;
+
+  const validPhotoOptions = ["everyone", "contacts", "nobody"];
+  const validFindOptions = ["everyone", "nobody"];
+
+  const updateFields = {};
+
+  if (profilePhoto !== undefined) {
+    if (!validPhotoOptions.includes(profilePhoto)) {
+      throw new ApiError(400, "Invalid profile photo privacy option");
+    }
+    updateFields["privacySettings.profilePhoto"] = profilePhoto;
+  }
+
+  if (whoCanFindMe !== undefined) {
+    if (!validFindOptions.includes(whoCanFindMe)) {
+      throw new ApiError(400, "Invalid search privacy option");
+    }
+    updateFields["privacySettings.whoCanFindMe"] = whoCanFindMe;
+  }
+
+  if (Object.keys(updateFields).length === 0) {
+    throw new ApiError(400, "No privacy settings provided to update");
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    { $set: updateFields },
+    { new: true, runValidators: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedUser, "Privacy settings updated successfully")
+    );
+});
+
+/**
+ * @desc    Update profile info (About status)
+ * @route   PATCH /api/users/profile
+ * @access  Private
+ */
+export const updateUserProfile = asyncHandler(async (req, res) => {
+  const { about } = req.body;
+
+  if (about !== undefined && about.length > 140) {
+    throw new ApiError(400, "About status cannot exceed 140 characters");
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        about: about ? about.trim() : "Hey there! I am using PulseChat.",
+      },
+    },
+    { new: true, runValidators: true }
+  ).select("-password -refreshToken");
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
 });

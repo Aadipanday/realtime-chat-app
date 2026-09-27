@@ -3,12 +3,14 @@ import API from "../../services/api";
 import { useChat } from "../../context/ChatContext";
 import { useSocket } from "../../context/SocketContext";
 import { Avatar } from "../Common/Avatar";
+import { ContactProfileModal } from "../Common/ContactProfileModal";
 import { X, Search, Loader2 } from "lucide-react";
 
 export const UserSearchModal = ({ isOpen, onClose }) => {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [previewUser, setPreviewUser] = useState(null);
   const { accessChat } = useChat();
   const { onlineUsers } = useSocket();
 
@@ -90,23 +92,33 @@ export const UserSearchModal = ({ isOpen, onClose }) => {
             users.map((user) => {
               const isOnline = onlineUsers.includes(user._id);
               return (
-                <button
+                <div
                   key={user._id}
                   onClick={() => handleSelectUser(user._id)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[var(--bg-active)] text-left transition-colors cursor-pointer"
                 >
-                  <Avatar
-                    src={user.avatar}
-                    alt={user.username}
-                    isOnline={isOnline}
-                    size="md"
-                  />
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewUser({ ...user, isOnline });
+                    }}
+                    className="relative shrink-0 hover:scale-105 transition-transform"
+                    title="Click to view full photo & info"
+                  >
+                    <Avatar
+                      src={user.avatar}
+                      alt={user.username}
+                      isOnline={isOnline}
+                      size="md"
+                    />
+                  </div>
+
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-sm text-[var(--text-primary)] truncate">
                       {user.username}
                     </p>
                     <p className="text-xs text-[var(--text-secondary)] truncate">
-                      {user.email}
+                      {user.about || user.email}
                     </p>
                   </div>
                   {isOnline && (
@@ -114,12 +126,23 @@ export const UserSearchModal = ({ isOpen, onClose }) => {
                       online
                     </span>
                   )}
-                </button>
+                </div>
               );
             })
           )}
         </div>
       </div>
+
+      {/* Contact Profile Modal */}
+      <ContactProfileModal
+        isOpen={!!previewUser}
+        onClose={() => setPreviewUser(null)}
+        user={previewUser}
+        isOnline={previewUser?.isOnline}
+        onStartChat={(u) => {
+          handleSelectUser(u._id || u.id);
+        }}
+      />
     </div>
   );
 };

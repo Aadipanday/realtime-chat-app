@@ -139,6 +139,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updatePrivacySettings = async (settings) => {
+    try {
+      const { data } = await API.patch("/users/privacy", settings);
+      const updatedUser = data.data;
+      setAuthUser(updatedUser);
+      localStorage.setItem("chat_app_user", JSON.stringify(updatedUser));
+      toast.success("Privacy settings updated!");
+      return { success: true };
+    } catch (error) {
+      const msg =
+        error.response?.data?.message || "Failed to update privacy settings";
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  };
+
+  const updateProfile = async ({ about }) => {
+    try {
+      const { data } = await API.patch("/users/profile", { about });
+      const updatedUser = data.data;
+      setAuthUser(updatedUser);
+      localStorage.setItem("chat_app_user", JSON.stringify(updatedUser));
+      toast.success("About status updated!");
+      return { success: true };
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to update profile";
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -150,6 +181,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         updateAvatar,
         changePassword,
+        updatePrivacySettings,
+        updateProfile,
       }}
     >
       {children}

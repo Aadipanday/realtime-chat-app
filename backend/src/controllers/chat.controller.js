@@ -38,9 +38,24 @@ export const accessChat = asyncHandler(async (req, res) => {
   });
 
   if (isChat.length > 0) {
+    const chatObj = isChat[0].toObject ? isChat[0].toObject() : isChat[0];
+    if (chatObj.users) {
+      chatObj.users = chatObj.users.map((u) => {
+        if (u._id && u._id.toString() !== req.user._id.toString()) {
+          if (u.privacySettings?.profilePhoto === "nobody") {
+            return {
+              ...u,
+              avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=private",
+              isAvatarHidden: true,
+            };
+          }
+        }
+        return u;
+      });
+    }
     return res
       .status(200)
-      .json(new ApiResponse(200, isChat[0], "Chat fetched successfully"));
+      .json(new ApiResponse(200, chatObj, "Chat fetched successfully"));
   } else {
     // Create a new 1-to-1 chat
     const chatData = {
@@ -64,9 +79,25 @@ export const accessChat = asyncHandler(async (req, res) => {
       });
     }
 
+    const chatObj = fullChat.toObject ? fullChat.toObject() : fullChat;
+    if (chatObj.users) {
+      chatObj.users = chatObj.users.map((u) => {
+        if (u._id && u._id.toString() !== req.user._id.toString()) {
+          if (u.privacySettings?.profilePhoto === "nobody") {
+            return {
+              ...u,
+              avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=private",
+              isAvatarHidden: true,
+            };
+          }
+        }
+        return u;
+      });
+    }
+
     return res
       .status(201)
-      .json(new ApiResponse(201, fullChat, "New 1-to-1 chat created successfully"));
+      .json(new ApiResponse(201, chatObj, "New 1-to-1 chat created successfully"));
   }
 });
 
@@ -89,9 +120,29 @@ export const fetchChats = asyncHandler(async (req, res) => {
     select: "username avatar email",
   });
 
+  const currentUserId = req.user._id.toString();
+  const sanitizedChats = chats.map((c) => {
+    const chatObj = c.toObject ? c.toObject() : c;
+    if (chatObj.users) {
+      chatObj.users = chatObj.users.map((u) => {
+        if (u._id && u._id.toString() !== currentUserId) {
+          if (u.privacySettings?.profilePhoto === "nobody") {
+            return {
+              ...u,
+              avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=private",
+              isAvatarHidden: true,
+            };
+          }
+        }
+        return u;
+      });
+    }
+    return chatObj;
+  });
+
   return res
     .status(200)
-    .json(new ApiResponse(200, chats, "Chats retrieved successfully"));
+    .json(new ApiResponse(200, sanitizedChats, "Chats retrieved successfully"));
 });
 
 /**

@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useChat } from "../../context/ChatContext";
 import { useAuth } from "../../context/AuthContext";
 import { useSocket } from "../../context/SocketContext";
 import { Avatar } from "../Common/Avatar";
+import { ContactProfileModal } from "../Common/ContactProfileModal";
 import { ArrowLeft, Users, Search, MoreVertical } from "lucide-react";
 
 export const ChatHeader = () => {
   const { selectedChat, setSelectedChat, typingInChat } = useChat();
   const { authUser } = useAuth();
   const { onlineUsers, userStatuses } = useSocket();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   if (!selectedChat) return null;
 
@@ -106,26 +108,35 @@ export const ChatHeader = () => {
           <ArrowLeft size={19} />
         </button>
 
-        <Avatar
-          src={avatarSrc}
-          alt={displayName}
-          isOnline={isOnline}
-          size="md"
-        />
+        {/* Clickable Profile Info Section (Avatar + Name) */}
+        <div
+          onClick={() => setIsProfileOpen(true)}
+          className="flex items-center gap-3 min-w-0 cursor-pointer hover:opacity-85 transition-opacity group"
+          title="Click to view contact info"
+        >
+          <div className="relative group-hover:scale-105 transition-transform">
+            <Avatar
+              src={avatarSrc}
+              alt={displayName}
+              isOnline={isOnline}
+              size="md"
+            />
+          </div>
 
-        <div className="truncate">
-          <h2 className="text-sm font-medium text-[var(--text-primary)] truncate">
-            {displayName}
-          </h2>
-          <p
-            className={`text-xs ${
-              isTyping || isOnline
-                ? "text-[var(--accent-color)] font-medium"
-                : "text-[var(--text-secondary)]"
-            }`}
-          >
-            {statusText}
-          </p>
+          <div className="truncate">
+            <h2 className="text-sm font-medium text-[var(--text-primary)] truncate group-hover:text-[var(--accent-color)] transition-colors">
+              {displayName}
+            </h2>
+            <p
+              className={`text-xs ${
+                isTyping || isOnline
+                  ? "text-[var(--accent-color)] font-medium"
+                  : "text-[var(--text-secondary)]"
+              }`}
+            >
+              {statusText}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -139,7 +150,8 @@ export const ChatHeader = () => {
 
         <button
           type="button"
-          title="Search in chat"
+          onClick={() => setIsProfileOpen(true)}
+          title="Contact Info"
           className="p-2 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-active)] transition-colors cursor-pointer"
         >
           <Search size={19} />
@@ -147,12 +159,28 @@ export const ChatHeader = () => {
 
         <button
           type="button"
-          title="More options"
+          onClick={() => setIsProfileOpen(true)}
+          title="Contact Info"
           className="p-2 rounded-full hover:text-[var(--text-primary)] hover:bg-[var(--bg-active)] transition-colors cursor-pointer"
         >
           <MoreVertical size={19} />
         </button>
       </div>
+
+      {/* WhatsApp Contact Profile Modal */}
+      <ContactProfileModal
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        user={
+          otherUser || {
+            _id: selectedChat._id,
+            username: displayName,
+            avatar: avatarSrc,
+          }
+        }
+        isOnline={isOnline}
+        statusText={statusText}
+      />
     </header>
   );
 };

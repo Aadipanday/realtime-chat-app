@@ -32,6 +32,24 @@ const userSchema = new mongoose.Schema(
       default: "https://api.dicebear.com/7.x/bottts/svg?seed=default",
       set: (v) => (v ? v.replace(/^http:\/\//i, "https://") : v),
     },
+    about: {
+      type: String,
+      default: "Hey there! I am using PulseChat.",
+      trim: true,
+      maxlength: [140, "About status cannot exceed 140 characters"],
+    },
+    privacySettings: {
+      profilePhoto: {
+        type: String,
+        enum: ["everyone", "contacts", "nobody"],
+        default: "everyone",
+      },
+      whoCanFindMe: {
+        type: String,
+        enum: ["everyone", "nobody"],
+        default: "everyone",
+      },
+    },
     refreshToken: {
       type: String,
     },
